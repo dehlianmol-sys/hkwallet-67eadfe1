@@ -147,6 +147,11 @@ as $$ begin
  insert into public.user_roles(user_id,role) values(new.id,'user'); return new;
 end $$;
 
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+after insert on auth.users
+for each row execute function public.handle_new_user();
+
 create or replace function public.check_user_exists(p_phone text)
 returns boolean language sql stable security definer set search_path = public
 as $$ select exists(select 1 from public.profiles where phone = regexp_replace(p_phone,'\D','','g')) $$;
