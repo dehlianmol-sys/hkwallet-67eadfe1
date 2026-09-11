@@ -1,17 +1,15 @@
-import { getLogoUrl } from './storage';
-
 /**
  * Single source of truth for brand assets and download links.
  *
- * The logo comes from the SAME source the admin panel uses:
- * the `logos` storage bucket, file `Vivrapaylogo.png`.
- * Replace that file in storage and it updates everywhere (admin + user side).
+ * The app logo is served from the /public directory so it renders reliably
+ * in production builds without depending on storage bucket configuration.
+ * Place the logo at public/brand/logo.png.
  */
 export const APP_NAME = 'Hkwallet';
 export const APP_TAGLINE = 'Earn Money Online';
 
-/** Same connection/source as the admin panel logo. */
-export const APP_LOGO = getLogoUrl('Vivrapaylogo.png');
+/** Absolute public path to the app logo (public/brand/logo.png). */
+export const APP_LOGO = '/brand/logo.png';
 
 /** Place the signed build at public/downloads/hkwallet.apk */
 export const APK_URL = '/downloads/hkwallet.apk';

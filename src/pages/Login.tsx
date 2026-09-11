@@ -3,6 +3,14 @@ import { useNavigate } from '@/lib/router-compat';
 import { useStore } from '../lib/store';
 import AuthShell from '../components/AuthShell';
 
+const AUTH_DOMAIN = '@hkwallet.app';
+
+function toAuthEmail(input: string): string {
+  const trimmed = input.trim();
+  if (trimmed.includes('@')) return trimmed;
+  return `${trimmed.replace(/\D/g, '')}${AUTH_DOMAIN}`;
+}
+
 export default function Login() {
   const { login } = useStore();
   const navigate = useNavigate();
@@ -15,14 +23,16 @@ export default function Login() {
     e.preventDefault();
     if (loading) return;
     setError('');
-    const digits = phone.replace(/\D/g, '');
-    if (digits.length !== 10) {
+    const trimmed = phone.trim();
+    const digits = trimmed.replace(/\D/g, '');
+    if (!trimmed.includes('@') && digits.length !== 10) {
       setError('Enter a valid 10 digit mobile number.');
       return;
     }
     setLoading(true);
     try {
-      const res = await login(digits, password);
+      const email = toAuthEmail(trimmed);
+      const res = await login(email, password);
       if (!res.ok) {
         setError(res.message);
         return;
