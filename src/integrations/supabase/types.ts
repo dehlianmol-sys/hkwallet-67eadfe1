@@ -342,6 +342,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      issue_otp_challenge: { Args: { p_phone: string }; Returns: string }
       review_deposit: {
         Args: { p_approve: boolean; p_deposit_id: string }
         Returns: undefined
@@ -359,6 +360,10 @@ export type Database = {
           total_commission: number
           total_members: number
         }[]
+      }
+      verify_otp_challenge: {
+        Args: { p_otp: string; p_phone: string }
+        Returns: boolean
       }
     }
     Enums: {
