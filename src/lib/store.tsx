@@ -4,18 +4,19 @@ import type { AppSettings, Banner, CustomerService, Deposit, LinkedUPI, PaymentG
 import { supabase } from './supabase';
 import { uploadImage as uploadToStorage } from './storage';
 
-const SESSION_KEY = 'hkwallet_session_v1';
+const db = supabase as any;
 
 interface ProfileRow {
   id: string;
   name: string;
   phone: string;
-  password: string;
-  role: User['role'];
+  role?: User['role'];
   wallet: number;
   has_deposited_300: boolean;
   locked_deposit_id: string | null;
-  agent_id: string | null;
+  referral_code: string;
+  referred_by: string | null;
+  avatar_url: string;
   created_at: string;
 }
 
@@ -123,13 +124,15 @@ function mapUser(p: ProfileRow, upis: LinkedUPI[]): User {
     id: p.id,
     name: p.name,
     phone: p.phone,
-    password: p.password,
-    role: p.role,
+    role: p.role ?? 'user',
     wallet: Number(p.wallet),
     has_deposited_300: p.has_deposited_300,
     upis,
     createdAt: p.created_at,
     lockedDepositId: p.locked_deposit_id,
+    referralCode: p.referral_code,
+    referredBy: p.referred_by,
+    avatarUrl: p.avatar_url,
   };
 }
 
@@ -203,16 +206,6 @@ function mapDeposit(r: TxRow): Deposit {
   };
 }
 
-function getSession(): string | null {
-  try { return localStorage.getItem(SESSION_KEY); } catch { return null; }
-}
-function setSession(id: string | null) {
-  try {
-    if (id) localStorage.setItem(SESSION_KEY, id);
-    else localStorage.removeItem(SESSION_KEY);
-  } catch { /* ignore */ }
-}
-
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<User[]>([]);
@@ -221,13 +214,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
   const [customerServices, setCustomerServices] = useState<CustomerService[]>([]);
-  const [sessionUserId, setSessionUserId] = useState<string | null>(() => getSession());
+  const [sessionUserId, setSessionUserId] = useState<string | null>(null);
   const mounted = useRef(true);
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const refreshAll = useCallback(async () => {
     const [pRes, uRes, gRes, bRes, tRes, sRes, csRes] = await Promise.all([
-      supabase.from('profiles').select('*'),
+      db.from('profiles').select('*'),
       supabase.from('upi_accounts').select('*'),
       supabase.from('payment_configurations').select('*'),
       supabase.from('banners').select('*'),
@@ -244,8 +237,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       (upisByUser[u.user_id] ??= []).push(mapped);
     }
 
+    const roleRes = await db.from('user_roles').select('user_id,role');
+    const roleByUser = new Map<string, User['role']>((roleRes.data ?? []).map((r: { user_id: string; role: User['role'] }) => [r.user_id, r.role]));
     const mappedUsers = ((pRes.data ?? []) as ProfileRow[]).map((p) =>
-      mapUser(p, upisByUser[p.id] ?? []),
+      mapUser({ ...p, role: roleByUser.get(p.id) ?? 'user' }, upisByUser[p.id] ?? []),
     );
     setUsers(mappedUsers);
     setGateways(((gRes.data ?? []) as GatewayRow[]).map(mapGateway));
@@ -268,9 +263,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     mounted.current = true;
     (async () => {
       setLoading(true);
+      const { data } = await supabase.auth.getUser();
+      setSessionUserId(data.user?.id ?? null);
       await refreshAll();
       if (mounted.current) setLoading(false);
     })();
+
+    const { data: authSubscription } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event !== 'SIGNED_IN' && event !== 'SIGNED_OUT' && event !== 'USER_UPDATED') return;
+      setSessionUserId(session?.user.id ?? null);
+      if (event !== 'SIGNED_OUT') void refreshAll();
+    });
 
     const channel = supabase
       .channel('hkwallet-all')
@@ -286,6 +289,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return () => {
       mounted.current = false;
       if (refreshTimer.current) clearTimeout(refreshTimer.current);
+      authSubscription.subscription.unsubscribe();
       supabase.removeChannel(channel);
     };
   }, [refreshAll, scheduleRefresh]);
@@ -299,58 +303,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const isSuperAdmin = currentUser?.role === 'super_admin';
 
   const login: StoreValue['login'] = useCallback(async (phone, password) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('phone', phone)
-      .maybeSingle();
-    if (error) return { ok: false, message: 'Network error. Please try again.' };
-    if (!data) return { ok: false, message: 'Account not found. Please register.' };
-    const row = data as ProfileRow;
-    if (row.password !== password) return { ok: false, message: 'Incorrect password.' };
-    setSession(row.id);
-    setSessionUserId(row.id);
-    return { ok: true, message: 'Login successful', user: mapUser(row, []) };
-  }, []);
-
-  const register: StoreValue['register'] = useCallback(async (name, phone, password, agentId) => {
-    const { data: existing } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('phone', phone)
-      .maybeSingle();
-    if (existing) return { ok: false, message: 'Phone number already registered.' };
-
-    const base = {
-      name,
-      phone,
-      password,
-      role: 'user',
-      wallet: 150,
-      has_deposited_300: false,
-      agent_id: agentId || null,
-    };
-    // Own invite code for this user + who invited them. Falls back gracefully when
-    // the referral columns have not been added to the database yet.
-    const ownCode = `HK${phone.slice(-4)}${Math.floor(100 + Math.random() * 900)}`;
-    let { data, error } = await supabase
-      .from('profiles')
-      .insert({ ...base, referral_code: ownCode, referred_by: agentId || null })
-      .select('*')
-      .single();
-    if (error) {
-      ({ data, error } = await supabase.from('profiles').insert(base).select('*').single());
-    }
-    if (error) return { ok: false, message: error.message };
-    const row = data as ProfileRow;
-    setSession(row.id);
-    setSessionUserId(row.id);
+    const { data, error } = await supabase.auth.signInWithPassword({ email: `${phone}@hkwallet.app`, password });
+    if (error || !data.user) return { ok: false, message: 'Incorrect phone number or password.' };
+    const { data: profile } = await db.from('profiles').select('*').eq('id', data.user.id).single();
+    const { data: roles } = await db.from('user_roles').select('role').eq('user_id', data.user.id);
+    if (!profile) return { ok: false, message: 'Your profile could not be loaded.' };
+    const role = (roles?.find((r: { role: string }) => r.role === 'admin')?.role ?? roles?.[0]?.role ?? 'user') as User['role'];
+    const user = mapUser({ ...profile, role }, []);
+    setSessionUserId(data.user.id);
     await refreshAll();
-    return { ok: true, message: 'Registration successful! ₹150 welcome bonus added.', user: mapUser(row, []) };
+    return { ok: true, message: 'Login successful', user };
   }, [refreshAll]);
 
+  const register: StoreValue['register'] = useCallback(async () => ({ ok: false, message: 'Please complete phone verification to register.' }), []);
+
   const logout = useCallback(() => {
-    setSession(null);
+    void supabase.auth.signOut();
     setSessionUserId(null);
   }, []);
 
@@ -385,90 +353,35 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         return { ok: false, message: 'You already have an active deposit. Complete or cancel it first.' };
       }
     }
-    const active = gateways.filter((g) => g.active);
-    if (active.length === 0) return { ok: false, message: 'No payment methods available. Please try later.' };
-    const chosen = active[Math.floor(Math.random() * active.length)];
-    const rewardPct = appSettings?.rewardPercentage ?? 4;
-    const reward = +(amount * rewardPct / 100).toFixed(2);
-    const now = Date.now();
-    const { data, error } = await supabase
-      .from('transaction_records')
-      .insert({
-        user_id: currentUser.id,
-        user_phone: currentUser.phone,
-        user_name: currentUser.name,
-        amount,
-        reward,
-        itoken: +(amount + reward).toFixed(2),
-        utr: '',
-        receipt_base64: null,
-        payment_method: { name: chosen.name, upi_id: chosen.upiId, qr: chosen.qr },
-        status: 'Pending',
-        type: 'deposit',
-        created_at: new Date(now).toISOString(),
-        expires_at: new Date(now + 30 * 60 * 1000).toISOString(),
-      })
-      .select('*')
-      .single();
+    const { data, error } = await supabase.rpc('create_deposit', { p_amount: amount });
     if (error || !data) return { ok: false, message: 'Could not create order. Please try again.' };
     const tx = mapDeposit(data as TxRow);
-    await supabase.from('profiles').update({ locked_deposit_id: tx.id }).eq('id', currentUser.id);
     await refreshAll();
     return { ok: true, message: 'Order created. Pay within 30 minutes.', deposit: tx };
-  }, [currentUser, deposits, gateways, appSettings, refreshAll]);
+  }, [currentUser, deposits, refreshAll]);
 
   const cancelDeposit: StoreValue['cancelDeposit'] = useCallback(async (depositId) => {
-    await supabase.from('transaction_records').delete().eq('id', depositId);
-    if (currentUser?.lockedDepositId === depositId) {
-      await supabase.from('profiles').update({ locked_deposit_id: null }).eq('id', currentUser.id);
-    }
+    await supabase.rpc('cancel_deposit', { p_deposit_id: depositId });
     await refreshAll();
   }, [currentUser, refreshAll]);
 
   const submitDepositProof: StoreValue['submitDepositProof'] = useCallback(async (depositId, utr, receiptPath) => {
     if (!/^\d{12}$/.test(utr)) return { ok: false, message: 'UTR must be exactly 12 numeric digits.' };
-    const { error } = await supabase
-      .from('transaction_records')
-      .update({ utr, receipt_base64: receiptPath, status: 'Pending' })
-      .eq('id', depositId);
+    const { error } = await supabase.rpc('submit_deposit_proof', { p_deposit_id: depositId, p_utr: utr, p_receipt: receiptPath ?? '' });
     if (error) return { ok: false, message: error.message };
-    if (currentUser?.lockedDepositId === depositId) {
-      await supabase.from('profiles').update({ locked_deposit_id: null }).eq('id', currentUser.id);
-    }
     await refreshAll();
     return { ok: true, message: 'Payment proof submitted. Awaiting admin approval.' };
   }, [currentUser, refreshAll]);
 
   const approveDeposit: StoreValue['approveDeposit'] = useCallback(async (depositId) => {
-    const dep = deposits.find((d) => d.id === depositId);
-    if (!dep || dep.status !== 'Pending') return;
-    await supabase.from('transaction_records').update({ status: 'Success' }).eq('id', depositId);
-    const target = users.find((u) => u.id === dep.userId);
-    if (target) {
-      const newbieMin = appSettings?.newbieRequiredOrderAmount ?? 300;
-      const newbieReward = appSettings?.newbieRewardAmount ?? 60;
-      const qualifiesForNewbie = !target.has_deposited_300 && dep.amount >= newbieMin;
-      const bonus = qualifiesForNewbie ? newbieReward : 0;
-      const patch: Record<string, unknown> = {
-        wallet: +(target.wallet + dep.itoken + bonus).toFixed(2),
-      };
-      if (qualifiesForNewbie) patch.has_deposited_300 = true;
-      if (target.lockedDepositId === depositId) patch.locked_deposit_id = null;
-      await supabase.from('profiles').update(patch).eq('id', target.id);
-    }
+    await supabase.rpc('review_deposit', { p_deposit_id: depositId, p_approve: true });
     await refreshAll();
-  }, [deposits, users, appSettings, refreshAll]);
+  }, [refreshAll]);
 
   const rejectDeposit: StoreValue['rejectDeposit'] = useCallback(async (depositId) => {
-    const dep = deposits.find((d) => d.id === depositId);
-    if (!dep) return;
-    await supabase.from('transaction_records').update({ status: 'Rejected' }).eq('id', depositId);
-    const target = users.find((u) => u.id === dep.userId);
-    if (target && target.lockedDepositId === depositId) {
-      await supabase.from('profiles').update({ locked_deposit_id: null }).eq('id', target.id);
-    }
+    await supabase.rpc('review_deposit', { p_deposit_id: depositId, p_approve: false });
     await refreshAll();
-  }, [deposits, users, refreshAll]);
+  }, [refreshAll]);
 
   const adjustUserBalance: StoreValue['adjustUserBalance'] = useCallback(async (userId, delta) => {
     const target = users.find((u) => u.id === userId);
