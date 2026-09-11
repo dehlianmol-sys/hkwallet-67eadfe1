@@ -14,10 +14,10 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { useStore } from '../../lib/store';
-import { getLogoUrl } from '../../lib/storage';
 import { useToast } from '../../lib/toast';
 
-const APP_LOGO = getLogoUrl('Vivrapaylogo.png');
+/** Absolute public path to the app logo (public/brand/logo.png). */
+const APP_LOGO = '/brand/logo.png';
 
 export default function AdminLayout() {
   const { currentUser, isSuperAdmin, logout } = useStore();

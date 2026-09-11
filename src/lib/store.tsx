@@ -302,8 +302,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'super_admin';
   const isSuperAdmin = currentUser?.role === 'super_admin';
 
-  const login: StoreValue['login'] = useCallback(async (phone, password) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email: `${phone}@hkwallet.app`, password });
+  const login: StoreValue['login'] = useCallback(async (phoneOrEmail, password) => {
+    const email = phoneOrEmail.includes('@') ? phoneOrEmail : `${phoneOrEmail.replace(/\D/g, '')}@hkwallet.app`;
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error || !data.user) return { ok: false, message: 'Incorrect phone number or password.' };
     const { data: profile } = await db.from('profiles').select('*').eq('id', data.user.id).single();
     const { data: roles } = await db.from('user_roles').select('role').eq('user_id', data.user.id);
