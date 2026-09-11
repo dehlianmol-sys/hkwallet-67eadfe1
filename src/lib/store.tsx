@@ -400,7 +400,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (patch.maxOrderSize !== undefined) dbPatch.max_order_size = patch.maxOrderSize;
     if (patch.newbieRequiredOrderAmount !== undefined) dbPatch.newbie_required_order_amount = patch.newbieRequiredOrderAmount;
     if (patch.newbieRewardAmount !== undefined) dbPatch.newbie_reward_amount = patch.newbieRewardAmount;
-    const { error } = await supabase.from('app_settings').update(dbPatch).eq('id', appSettings.id);
+    const { error } = await db.from('app_settings').update(dbPatch).eq('id', appSettings.id);
     if (error) throw error;
     await refreshAll();
   }, [appSettings, refreshAll]);
@@ -435,7 +435,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (patch.upiId !== undefined) dbPatch.upi_id = patch.upiId;
     if (patch.qr !== undefined) dbPatch.qr = patch.qr;
     if (patch.active !== undefined) dbPatch.active = patch.active;
-    await supabase.from('payment_configurations').update(dbPatch).eq('id', id);
+    await db.from('payment_configurations').update(dbPatch).eq('id', id);
     await refreshAll();
   }, [refreshAll]);
 
