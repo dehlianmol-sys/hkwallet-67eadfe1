@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 import { useStore } from '../lib/store';
 import { getPublicUrl } from '../lib/storage';
 

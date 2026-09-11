@@ -27,6 +27,7 @@ export async function compressImage(file: File): Promise<File> {
 
 export function getPublicUrl(path: string): string {
   if (!path) return '';
+  if (path.startsWith('/')) return path;
   if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:') || path.startsWith('blob:')) return path;
   return supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
 }
