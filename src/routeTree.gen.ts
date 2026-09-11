@@ -10,33 +10,313 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as CustomerServiceRouteImport } from './routes/customer-service'
+import { Route as DepositRouteImport } from './routes/deposit'
+import { Route as DownloadRouteImport } from './routes/download'
+import { Route as LandingRouteImport } from './routes/landing'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as MineRouteImport } from './routes/mine'
+import { Route as PaymentRouteImport } from './routes/payment'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as TeamRouteImport } from './routes/team'
+import { Route as UpiRouteImport } from './routes/upi'
+import { Route as ReferralCodeRegisterRouteImport } from './routes/$referralCode.register'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminAgentsRouteImport } from './routes/admin.agents'
+import { Route as AdminBannersRouteImport } from './routes/admin.banners'
+import { Route as AdminCustomerServiceRouteImport } from './routes/admin.customer-service'
+import { Route as AdminDepositsRouteImport } from './routes/admin.deposits'
+import { Route as AdminGatewaysRouteImport } from './routes/admin.gateways'
+import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AgentDashboardRouteImport } from './routes/agent.dashboard'
+import { Route as AgentLoginRouteImport } from './routes/agent.login'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomerServiceRoute = CustomerServiceRouteImport.update({
+  id: '/customer-service',
+  path: '/customer-service',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DepositRoute = DepositRouteImport.update({
+  id: '/deposit',
+  path: '/deposit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DownloadRoute = DownloadRouteImport.update({
+  id: '/download',
+  path: '/download',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LandingRoute = LandingRouteImport.update({
+  id: '/landing',
+  path: '/landing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MineRoute = MineRouteImport.update({
+  id: '/mine',
+  path: '/mine',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentRoute = PaymentRouteImport.update({
+  id: '/payment',
+  path: '/payment',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeamRoute = TeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UpiRoute = UpiRouteImport.update({
+  id: '/upi',
+  path: '/upi',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReferralCodeRegisterRoute = ReferralCodeRegisterRouteImport.update({
+  id: '/$referralCode/register',
+  path: '/$referralCode/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAgentsRoute = AdminAgentsRouteImport.update({
+  id: '/agents',
+  path: '/agents',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminBannersRoute = AdminBannersRouteImport.update({
+  id: '/banners',
+  path: '/banners',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCustomerServiceRoute = AdminCustomerServiceRouteImport.update({
+  id: '/customer-service',
+  path: '/customer-service',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminDepositsRoute = AdminDepositsRouteImport.update({
+  id: '/deposits',
+  path: '/deposits',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminGatewaysRoute = AdminGatewaysRouteImport.update({
+  id: '/gateways',
+  path: '/gateways',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AgentDashboardRoute = AgentDashboardRouteImport.update({
+  id: '/agent/dashboard',
+  path: '/agent/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgentLoginRoute = AgentLoginRouteImport.update({
+  id: '/agent/login',
+  path: '/agent/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/customer-service': typeof CustomerServiceRoute
+  '/deposit': typeof DepositRoute
+  '/download': typeof DownloadRoute
+  '/landing': typeof LandingRoute
+  '/login': typeof LoginRoute
+  '/mine': typeof MineRoute
+  '/payment': typeof PaymentRoute
+  '/register': typeof RegisterRoute
+  '/team': typeof TeamRoute
+  '/upi': typeof UpiRoute
+  '/$referralCode/register': typeof ReferralCodeRegisterRoute
+  '/admin/agents': typeof AdminAgentsRoute
+  '/admin/banners': typeof AdminBannersRoute
+  '/admin/customer-service': typeof AdminCustomerServiceRoute
+  '/admin/deposits': typeof AdminDepositsRoute
+  '/admin/gateways': typeof AdminGatewaysRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/agent/dashboard': typeof AgentDashboardRoute
+  '/agent/login': typeof AgentLoginRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/customer-service': typeof CustomerServiceRoute
+  '/deposit': typeof DepositRoute
+  '/download': typeof DownloadRoute
+  '/landing': typeof LandingRoute
+  '/login': typeof LoginRoute
+  '/mine': typeof MineRoute
+  '/payment': typeof PaymentRoute
+  '/register': typeof RegisterRoute
+  '/team': typeof TeamRoute
+  '/upi': typeof UpiRoute
+  '/$referralCode/register': typeof ReferralCodeRegisterRoute
+  '/admin/agents': typeof AdminAgentsRoute
+  '/admin/banners': typeof AdminBannersRoute
+  '/admin/customer-service': typeof AdminCustomerServiceRoute
+  '/admin/deposits': typeof AdminDepositsRoute
+  '/admin/gateways': typeof AdminGatewaysRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/agent/dashboard': typeof AgentDashboardRoute
+  '/agent/login': typeof AgentLoginRoute
+  '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/customer-service': typeof CustomerServiceRoute
+  '/deposit': typeof DepositRoute
+  '/download': typeof DownloadRoute
+  '/landing': typeof LandingRoute
+  '/login': typeof LoginRoute
+  '/mine': typeof MineRoute
+  '/payment': typeof PaymentRoute
+  '/register': typeof RegisterRoute
+  '/team': typeof TeamRoute
+  '/upi': typeof UpiRoute
+  '/$referralCode/register': typeof ReferralCodeRegisterRoute
+  '/admin/agents': typeof AdminAgentsRoute
+  '/admin/banners': typeof AdminBannersRoute
+  '/admin/customer-service': typeof AdminCustomerServiceRoute
+  '/admin/deposits': typeof AdminDepositsRoute
+  '/admin/gateways': typeof AdminGatewaysRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/agent/dashboard': typeof AgentDashboardRoute
+  '/agent/login': typeof AgentLoginRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/customer-service'
+    | '/deposit'
+    | '/download'
+    | '/landing'
+    | '/login'
+    | '/mine'
+    | '/payment'
+    | '/register'
+    | '/team'
+    | '/upi'
+    | '/$referralCode/register'
+    | '/admin/agents'
+    | '/admin/banners'
+    | '/admin/customer-service'
+    | '/admin/deposits'
+    | '/admin/gateways'
+    | '/admin/settings'
+    | '/admin/users'
+    | '/agent/dashboard'
+    | '/agent/login'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/customer-service'
+    | '/deposit'
+    | '/download'
+    | '/landing'
+    | '/login'
+    | '/mine'
+    | '/payment'
+    | '/register'
+    | '/team'
+    | '/upi'
+    | '/$referralCode/register'
+    | '/admin/agents'
+    | '/admin/banners'
+    | '/admin/customer-service'
+    | '/admin/deposits'
+    | '/admin/gateways'
+    | '/admin/settings'
+    | '/admin/users'
+    | '/agent/dashboard'
+    | '/agent/login'
+    | '/admin'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/customer-service'
+    | '/deposit'
+    | '/download'
+    | '/landing'
+    | '/login'
+    | '/mine'
+    | '/payment'
+    | '/register'
+    | '/team'
+    | '/upi'
+    | '/$referralCode/register'
+    | '/admin/agents'
+    | '/admin/banners'
+    | '/admin/customer-service'
+    | '/admin/deposits'
+    | '/admin/gateways'
+    | '/admin/settings'
+    | '/admin/users'
+    | '/agent/dashboard'
+    | '/agent/login'
+    | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
+  CustomerServiceRoute: typeof CustomerServiceRoute
+  DepositRoute: typeof DepositRoute
+  DownloadRoute: typeof DownloadRoute
+  LandingRoute: typeof LandingRoute
+  LoginRoute: typeof LoginRoute
+  MineRoute: typeof MineRoute
+  PaymentRoute: typeof PaymentRoute
+  RegisterRoute: typeof RegisterRoute
+  TeamRoute: typeof TeamRoute
+  UpiRoute: typeof UpiRoute
+  ReferralCodeRegisterRoute: typeof ReferralCodeRegisterRoute
+  AgentDashboardRoute: typeof AgentDashboardRoute
+  AgentLoginRoute: typeof AgentLoginRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +328,203 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customer-service': {
+      id: '/customer-service'
+      path: '/customer-service'
+      fullPath: '/customer-service'
+      preLoaderRoute: typeof CustomerServiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/deposit': {
+      id: '/deposit'
+      path: '/deposit'
+      fullPath: '/deposit'
+      preLoaderRoute: typeof DepositRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/download': {
+      id: '/download'
+      path: '/download'
+      fullPath: '/download'
+      preLoaderRoute: typeof DownloadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/landing': {
+      id: '/landing'
+      path: '/landing'
+      fullPath: '/landing'
+      preLoaderRoute: typeof LandingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mine': {
+      id: '/mine'
+      path: '/mine'
+      fullPath: '/mine'
+      preLoaderRoute: typeof MineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payment': {
+      id: '/payment'
+      path: '/payment'
+      fullPath: '/payment'
+      preLoaderRoute: typeof PaymentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/team': {
+      id: '/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof TeamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/upi': {
+      id: '/upi'
+      path: '/upi'
+      fullPath: '/upi'
+      preLoaderRoute: typeof UpiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$referralCode/register': {
+      id: '/$referralCode/register'
+      path: '/$referralCode/register'
+      fullPath: '/$referralCode/register'
+      preLoaderRoute: typeof ReferralCodeRegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/agents': {
+      id: '/admin/agents'
+      path: '/agents'
+      fullPath: '/admin/agents'
+      preLoaderRoute: typeof AdminAgentsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/banners': {
+      id: '/admin/banners'
+      path: '/banners'
+      fullPath: '/admin/banners'
+      preLoaderRoute: typeof AdminBannersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/customer-service': {
+      id: '/admin/customer-service'
+      path: '/customer-service'
+      fullPath: '/admin/customer-service'
+      preLoaderRoute: typeof AdminCustomerServiceRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/deposits': {
+      id: '/admin/deposits'
+      path: '/deposits'
+      fullPath: '/admin/deposits'
+      preLoaderRoute: typeof AdminDepositsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/gateways': {
+      id: '/admin/gateways'
+      path: '/gateways'
+      fullPath: '/admin/gateways'
+      preLoaderRoute: typeof AdminGatewaysRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/agent/dashboard': {
+      id: '/agent/dashboard'
+      path: '/agent/dashboard'
+      fullPath: '/agent/dashboard'
+      preLoaderRoute: typeof AgentDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agent/login': {
+      id: '/agent/login'
+      path: '/agent/login'
+      fullPath: '/agent/login'
+      preLoaderRoute: typeof AgentLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface AdminRouteChildren {
+  AdminAgentsRoute: typeof AdminAgentsRoute
+  AdminBannersRoute: typeof AdminBannersRoute
+  AdminCustomerServiceRoute: typeof AdminCustomerServiceRoute
+  AdminDepositsRoute: typeof AdminDepositsRoute
+  AdminGatewaysRoute: typeof AdminGatewaysRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminUsersRoute: typeof AdminUsersRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminAgentsRoute: AdminAgentsRoute,
+  AdminBannersRoute: AdminBannersRoute,
+  AdminCustomerServiceRoute: AdminCustomerServiceRoute,
+  AdminDepositsRoute: AdminDepositsRoute,
+  AdminGatewaysRoute: AdminGatewaysRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
+  AdminUsersRoute: AdminUsersRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
+  CustomerServiceRoute: CustomerServiceRoute,
+  DepositRoute: DepositRoute,
+  DownloadRoute: DownloadRoute,
+  LandingRoute: LandingRoute,
+  LoginRoute: LoginRoute,
+  MineRoute: MineRoute,
+  PaymentRoute: PaymentRoute,
+  RegisterRoute: RegisterRoute,
+  TeamRoute: TeamRoute,
+  UpiRoute: UpiRoute,
+  ReferralCodeRegisterRoute: ReferralCodeRegisterRoute,
+  AgentDashboardRoute: AgentDashboardRoute,
+  AgentLoginRoute: AgentLoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
