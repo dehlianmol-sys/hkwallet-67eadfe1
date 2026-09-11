@@ -1,6 +1,8 @@
 import { supabase } from './supabase';
 import { SITE_ORIGIN, referralLink } from './brand';
 
+const db = supabase as any;
+
 export interface Agent {
   id: string;
   agentId: string;
@@ -44,7 +46,7 @@ export function generateAgentCode(): string {
 }
 
 export async function listAgents(): Promise<Agent[]> {
-  const { data } = await supabase
+  const { data } = await db
     .from('agents')
     .select('*')
     .order('agent_id', { ascending: false });
@@ -58,7 +60,7 @@ export async function createAgent(input: {
 }): Promise<{ ok: boolean; message: string; agent?: Agent }> {
   for (let attempt = 0; attempt < 5; attempt++) {
     const code = generateAgentCode();
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('agents')
       .insert({
         agent_id: code,
@@ -77,11 +79,11 @@ export async function createAgent(input: {
 }
 
 export async function deleteAgent(id: string): Promise<void> {
-  await supabase.from('agents').delete().eq('id', id);
+  await db.from('agents').delete().eq('id', id);
 }
 
 export async function agentLogin(agentCode: string, phone: string): Promise<Agent | null> {
-  const { data } = await supabase
+  const { data } = await db
     .from('agents')
     .select('*')
     .eq('agent_id', agentCode.trim().toUpperCase())
@@ -91,7 +93,7 @@ export async function agentLogin(agentCode: string, phone: string): Promise<Agen
 }
 
 export async function getAgentById(id: string): Promise<Agent | null> {
-  const { data } = await supabase.from('agents').select('*').eq('id', id).maybeSingle();
+  const { data } = await db.from('agents').select('*').eq('id', id).maybeSingle();
   return data ? mapAgent(data as AgentRow) : null;
 }
 
@@ -103,7 +105,7 @@ export interface AgentStats {
 
 /** Aggregate registered users + successful deposit volume for one agent code. */
 export async function getAgentStats(agentCode: string, commissionPercentage: number = COMMISSION_TIERS.level1): Promise<AgentStats> {
-  const { data: profiles } = await supabase.from('profiles').select('id').eq('agent_id', agentCode);
+  const { data: profiles } = await db.from('profiles').select('id').eq('referred_by', agentCode);
   const ids = ((profiles ?? []) as { id: string }[]).map((p) => p.id);
   if (ids.length === 0) return { users: 0, deposits: 0, commission: 0 };
   const { data: txs } = await supabase
@@ -120,7 +122,7 @@ export async function getAgentStats(agentCode: string, commissionPercentage: num
 }
 
 export async function claimPreRegistration(phone: string, refCode: string): Promise<{ ok: boolean; message: string }> {
-  const { error } = await supabase
+  const { error } = await db
     .from('pre_registrations')
     .upsert({ phone_number: phone, ref_code: refCode }, { onConflict: 'phone_number' });
   if (error) return { ok: false, message: error.message };
@@ -131,7 +133,7 @@ export async function claimPreRegistration(phone: string, refCode: string): Prom
 /** Referral code for a signup: pre-registration by phone first, then locally stored code. */
 export async function lookupRefCode(phone: string): Promise<string | null> {
   if (phone.trim().length >= 10) {
-    const { data } = await supabase
+    const { data } = await db
       .from('pre_registrations')
       .select('ref_code')
       .eq('phone_number', phone.trim())

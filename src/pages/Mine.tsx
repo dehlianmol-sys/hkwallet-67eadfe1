@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from '@/lib/router-compat';
 import { ChevronRight, X } from 'lucide-react';
 import { useStore } from '../lib/store';
 import { useToast } from '../lib/toast';
@@ -8,25 +8,11 @@ import { getPublicUrl } from '../lib/storage';
 type ModalKind = 'itoken' | 'profit' | 'event';
 type SubPage = 'sell-history' | 'buy-history' | 'newbie';
 
-const AVATARS = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => `Profilelogo${n}.png`);
-
 /** Stable 4-digit display ID derived from the UUID (the real UUID stays untouched). */
 export function shortId(uuid: string): string {
   let h = 0;
   for (let i = 0; i < uuid.length; i += 1) h = (h * 31 + uuid.charCodeAt(i)) >>> 0;
   return String(h % 10000).padStart(4, '0');
-}
-
-function pickAvatar(uuid: string): string {
-  // Shuffle the list, then take a slot keyed off the user so it stays consistent per session.
-  const shuffled = [...AVATARS];
-  for (let i = shuffled.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  let h = 0;
-  for (let i = 0; i < uuid.length; i += 1) h = (h * 17 + uuid.charCodeAt(i)) >>> 0;
-  return shuffled[h % shuffled.length];
 }
 
 export default function Mine() {
@@ -41,7 +27,7 @@ export default function Mine() {
   const wallet = currentUser?.wallet ?? 0;
   const userId = currentUser ? shortId(currentUser.id) : '—';
   const rewardPct = appSettings?.rewardPercentage ?? 4;
-  const avatarFile = useMemo(() => (currentUser ? pickAvatar(currentUser.id) : AVATARS[0]), [currentUser?.id]);
+  const avatarFile = useMemo(() => currentUser?.avatarUrl ?? '/brand/logo.png', [currentUser?.avatarUrl]);
   const [avatarBroken, setAvatarBroken] = useState(false);
 
   const doLogout = () => {

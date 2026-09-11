@@ -4,13 +4,15 @@ export interface User {
   id: string;
   name: string;
   phone: string;
-  password: string;
   role: Role;
   wallet: number;
   has_deposited_300: boolean;
   upis: LinkedUPI[];
   createdAt: string;
   lockedDepositId?: string | null;
+  referralCode: string;
+  referredBy?: string | null;
+  avatarUrl: string;
 }
 
 export interface LinkedUPI {

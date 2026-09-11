@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import { useServerFn } from '@tanstack/react-start';
 import { Link, useLocation, useNavigate } from '@/lib/router-compat';
-import { supabase } from '../lib/supabase';
-import { useStore } from '../lib/store';
+import { completeRegistration, requestRegistrationOtp } from '../lib/auth.functions';
 import { useToast } from '../lib/toast';
 import { lookupRefCode, REF_CODE_KEY } from '../lib/agents';
 import AuthShell from '../components/AuthShell';
@@ -13,10 +13,6 @@ function storedRefCode(): string {
   } catch {
     return '';
   }
-}
-
-function generateSixDigitOtp(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
 /* ------------------------------------------------------------------ */
@@ -57,7 +53,8 @@ function cooldownRemaining(phone: string): number {
 }
 
 export default function Register({ referralCode }: { referralCode?: string } = {}) {
-  const { register } = useStore();
+  const requestOtp = useServerFn(requestRegistrationOtp);
+  const registerAccount = useServerFn(completeRegistration);
   const navigate = useNavigate();
   const { search } = useLocation();
   const toast = useToast();
@@ -72,7 +69,6 @@ export default function Register({ referralCode }: { referralCode?: string } = {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [enteredOtp, setEnteredOtp] = useState('');
-  const [generatedOtp, setGeneratedOtp] = useState('');
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -142,36 +138,12 @@ export default function Register({ referralCode }: { referralCode?: string } = {
       return;
     }
 
-    // Existing user check — abort before generating or sending any OTP.
-    try {
-      const { data } = await supabase
-        .from('users')
-        .select('id')
-        .eq('phone', digits)
-        .maybeSingle();
-      if (data) {
-        toast('You are already registered. Please download the app and login.', 'error');
-        return;
-      }
-    } catch {
-      /* lookup failed — continue; duplicate signup is rejected server-side anyway */
-    }
-
-    const theGenerated6DigitOtp = generateSixDigitOtp();
-    setGeneratedOtp(theGenerated6DigitOtp);
     setLoading(true);
 
     try {
-      const { error: fnError } = await supabase.functions.invoke('send-otp', {
-        body: {
-          phone: digits,
-          otp: theGenerated6DigitOtp,
-          senderType: 'FYDBZR',
-        },
-      });
-
-      if (fnError) {
-        setError(fnError.message || 'Could not send OTP. Please try again.');
+      const result = await requestOtp({ data: { phone: digits } });
+      if (!result.ok) {
+        setError(result.message);
         return;
       }
 
@@ -199,31 +171,11 @@ export default function Register({ referralCode }: { referralCode?: string } = {
     if (loading) return;
     setError('');
 
-    if (enteredOtp !== generatedOtp) {
-      toast('Invalid OTP', 'error');
-      return;
-    }
-
     setLoading(true);
     try {
       const digits = phoneNumber.replace(/\D/g, '');
-
-      const { error: authError } = await supabase.auth.signUp({
-        email: digits + '@hkwallet.app',
-        password,
-        options: {
-          data: { phone: digits },
-        },
-      });
-
-      if (authError) {
-        setError(authError.message);
-        return;
-      }
-
-      // Bridge to the existing profiles-based backend.
       const agentId = lockedRef || (await lookupRefCode(digits)) || null;
-      const res = await register(digits, digits, password, agentId);
+      const res = await registerAccount({ data: { phone: digits, password, otp: enteredOtp, referredBy: agentId ?? undefined } });
       if (!res.ok) {
         setError(res.message);
         return;
